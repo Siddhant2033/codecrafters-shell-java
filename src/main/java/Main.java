@@ -22,8 +22,23 @@ public class Main {
 
                 String path = input.substring(3);
 
-                File newDir = new File(path);
+                File newDir;
 
+                if (path.startsWith("/")) {
+                    newDir = new File(path);
+                }
+
+                else {
+                    newDir = new File(currentDirectory, path);
+                }
+
+                try {
+                    newDir = newDir.getCanonicalFile();
+                } catch (Exception e) {
+                    System.out.println("cd: " + path + ": No such file or directory");
+                    continue;
+                }
+                
                 if (newDir.exists() && newDir.isDirectory()) {
                     currentDirectory = newDir;
                     System.setProperty("user.dir", currentDirectory.getAbsolutePath());
