@@ -7,8 +7,7 @@ public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        Set<String> builtins = Set.of("echo", "exit", "type");
-
+        Set<String> builtins = Set.of("echo", "exit", "type", "pwd");
         while (true) {
             System.out.print("$ ");
 
@@ -16,6 +15,8 @@ public class Main {
 
             if (input.equals("exit")) {
                 break;
+            } else if (input.equals("pwd")) {
+                System.out.println(System.getProperty("user.dir"));
             }
 
             else if (input.startsWith("echo ")) {
