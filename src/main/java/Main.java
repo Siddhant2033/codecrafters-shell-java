@@ -103,7 +103,7 @@ public class Main {
 
         while (true) {
 
-            // automatic reaping before prompt
+            // auto reap before prompt
             reapJobs(backgroundJobs, jobCounter);
 
             System.out.print("$ ");
@@ -123,10 +123,10 @@ public class Main {
 
                 char ch = input.charAt(i);
 
-                // BACKSLASH HANDLING
+                // BACKSLASH
                 if (ch == '\\') {
 
-                    // Outside quotes
+                    // outside quotes
                     if (!inSingleQuote && !inDoubleQuote) {
 
                         if (i + 1 < input.length()) {
@@ -135,7 +135,7 @@ public class Main {
                         }
                     }
 
-                    // Inside double quotes
+                    // inside double quotes
                     else if (inDoubleQuote) {
 
                         if (i + 1 < input.length()) {
@@ -145,7 +145,9 @@ public class Main {
                             if (next == '"' || next == '\\') {
                                 current.append(next);
                                 i++;
-                            } else {
+                            }
+
+                            else {
                                 current.append('\\');
                             }
 
@@ -154,23 +156,23 @@ public class Main {
                         }
                     }
 
-                    // Inside single quotes
+                    // inside single quotes
                     else {
                         current.append('\\');
                     }
                 }
 
-                // SINGLE QUOTES
+                // single quote
                 else if (ch == '\'' && !inDoubleQuote) {
                     inSingleQuote = !inSingleQuote;
                 }
 
-                // DOUBLE QUOTES
+                // double quote
                 else if (ch == '"' && !inSingleQuote) {
                     inDoubleQuote = !inDoubleQuote;
                 }
 
-                // SPACES OUTSIDE QUOTES
+                // whitespace outside quotes
                 else if (Character.isWhitespace(ch)
                         && !inSingleQuote
                         && !inDoubleQuote) {
@@ -181,7 +183,6 @@ public class Main {
                     }
                 }
 
-                // NORMAL CHARACTERS
                 else {
                     current.append(ch);
                 }
@@ -305,12 +306,6 @@ public class Main {
                         System.out.println(currentDirectory.getAbsolutePath());
                     }
 
-                    if (errorFile != null) {
-                        new PrintStream(
-                                new FileOutputStream(errorFile, appendError)
-                        ).close();
-                    }
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -346,25 +341,9 @@ public class Main {
 
                 catch (Exception e) {
 
-                    try {
-
-                        if (errorFile != null) {
-
-                            PrintStream err = new PrintStream(
-                                    new FileOutputStream(errorFile, appendError)
-                            );
-
-                            err.println("cd: " + path + ": No such file or directory");
-
-                            err.close();
-
-                        } else {
-                            System.err.println("cd: " + path + ": No such file or directory");
-                        }
-
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
+                    System.err.println(
+                            "cd: " + path + ": No such file or directory"
+                    );
 
                     continue;
                 }
@@ -379,33 +358,15 @@ public class Main {
 
                 } else {
 
-                    try {
-
-                        if (errorFile != null) {
-
-                            PrintStream err = new PrintStream(
-                                    new FileOutputStream(errorFile, appendError)
-                            );
-
-                            err.println("cd: " + path + ": No such file or directory");
-
-                            err.close();
-
-                        } else {
-                            System.err.println("cd: " + path + ": No such file or directory");
-                        }
-
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
+                    System.err.println(
+                            "cd: " + path + ": No such file or directory"
+                    );
                 }
             }
 
             // ================= JOBS =================
 
             else if (command.equals("jobs")) {
-
-                reapJobs(backgroundJobs, jobCounter);
 
                 ArrayList<Job> activeJobs = new ArrayList<>();
 
@@ -440,9 +401,7 @@ public class Main {
 
                     String cmd = job.command;
 
-                    if (!cmd.trim().endsWith("&")) {
-                        cmd += " &";
-                    }
+                    cmd = cmd.replaceAll("\\s*&\\s*$", "") + " &";
 
                     System.out.printf(
                             "[%d]%s  %-24s%s%n",
@@ -470,15 +429,6 @@ public class Main {
                 }
 
                 try {
-
-                    if (errorFile != null) {
-
-                        PrintStream err = new PrintStream(
-                                new FileOutputStream(errorFile, appendError)
-                        );
-
-                        err.close();
-                    }
 
                     if (outputFile != null) {
 
@@ -572,8 +522,7 @@ public class Main {
 
                             Process process = pb.start();
 
-                            // ================= BACKGROUND =================
-
+                            // background
                             if (runInBackground) {
 
                                 new Thread(() -> {
@@ -608,11 +557,10 @@ public class Main {
                                 );
                             }
 
-                            // ================= FOREGROUND =================
-
+                            // foreground
                             else {
 
-                                // STDOUT
+                                // stdout
                                 if (outputFile != null) {
 
                                     FileOutputStream fos =
@@ -630,7 +578,7 @@ public class Main {
                                             .transferTo(System.out);
                                 }
 
-                                // STDERR
+                                // stderr
                                 if (errorFile != null) {
 
                                     FileOutputStream errFos =
@@ -662,28 +610,7 @@ public class Main {
                 }
 
                 if (!found) {
-
-                    String result = command + ": not found";
-
-                    try {
-
-                        if (errorFile != null) {
-
-                            PrintStream err = new PrintStream(
-                                    new FileOutputStream(errorFile, appendError)
-                            );
-
-                            err.println(result);
-
-                            err.close();
-
-                        } else {
-                            System.err.println(result);
-                        }
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    System.err.println(command + ": not found");
                 }
             }
         }
