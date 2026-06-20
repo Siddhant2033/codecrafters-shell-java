@@ -355,6 +355,7 @@ public class Main {
 
                 try {
 
+                    // create stderr file even if empty
                     if (errorFile != null) {
 
                         PrintStream err =
@@ -366,6 +367,7 @@ public class Main {
                         err.close();
                     }
 
+                    // stdout handling
                     if (outputFile != null) {
 
                         PrintStream fileOut =
@@ -458,13 +460,18 @@ public class Main {
 
                             pb.directory(file.getParentFile());
 
-                            // IMPORTANT FOR THIS STAGE
-                            pb.inheritIO();
-
                             Process process = pb.start();
 
-                            // BACKGROUND PROCESS
+                            // ================= BACKGROUND =================
+
                             if (runInBackground) {
+
+                                // inherit terminal streams
+                                process.getInputStream()
+                                        .transferTo(System.out);
+
+                                process.getErrorStream()
+                                        .transferTo(System.err);
 
                                 int currentJob = jobCounter++;
 
@@ -475,8 +482,45 @@ public class Main {
                                 );
                             }
 
-                            // FOREGROUND PROCESS
+                            // ================= FOREGROUND =================
+
                             else {
+
+                                // CREATE OUTPUT FILE EVEN IF EMPTY
+                                if (outputFile != null) {
+
+                                    FileOutputStream fos =
+                                            new FileOutputStream(
+                                                    outputFile,
+                                                    appendOutput);
+
+                                    process.getInputStream().transferTo(fos);
+
+                                    fos.close();
+
+                                } else {
+
+                                    process.getInputStream()
+                                            .transferTo(System.out);
+                                }
+
+                                // CREATE ERROR FILE EVEN IF EMPTY
+                                if (errorFile != null) {
+
+                                    FileOutputStream errFos =
+                                            new FileOutputStream(
+                                                    errorFile,
+                                                    appendError);
+
+                                    process.getErrorStream().transferTo(errFos);
+
+                                    errFos.close();
+
+                                } else {
+
+                                    process.getErrorStream()
+                                            .transferTo(System.err);
+                                }
 
                                 process.waitFor();
                             }
