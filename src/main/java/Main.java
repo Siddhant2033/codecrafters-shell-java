@@ -7,20 +7,19 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
-class Job {
-
-    int jobNumber;
-    Process process;
-    String command;
-
-    Job(int jobNumber, Process process, String command) {
-        this.jobNumber = jobNumber;
-        this.process = process;
-        this.command = command;
-    }
-}
-
 public class Main {
+    static class Job {
+
+        int jobNumber;
+        Process process;
+        String command;
+
+        Job(int jobNumber, Process process, String command) {
+            this.jobNumber = jobNumber;
+            this.process = process;
+            this.command = command;
+        }
+    }
 
     public static void main(String[] args) {
 
