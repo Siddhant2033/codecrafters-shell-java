@@ -104,9 +104,10 @@ public class Main {
 
             String[] parts = partsList.toArray(new String[0]);
 
-            // ================= OUTPUT REDIRECTION =================
+            // ================= REDIRECTION =================
 
             String outputFile = null;
+            String errorFile = null;
 
             ArrayList<String> cleanedParts = new ArrayList<>();
 
@@ -118,10 +119,21 @@ public class Main {
                         outputFile = parts[i + 1];
                     }
 
-                    break;
+                    i++;
                 }
 
-                cleanedParts.add(parts[i]);
+                else if (parts[i].equals("2>")) {
+
+                    if (i + 1 < parts.length) {
+                        errorFile = parts[i + 1];
+                    }
+
+                    i++;
+                }
+
+                else {
+                    cleanedParts.add(parts[i]);
+                }
             }
 
             parts = cleanedParts.toArray(new String[0]);
@@ -141,7 +153,25 @@ public class Main {
             // ================= PWD =================
 
             else if (command.equals("pwd")) {
-                System.out.println(currentDirectory.getAbsolutePath());
+
+                try {
+
+                    if (outputFile != null) {
+
+                        PrintStream out =
+                                new PrintStream(new FileOutputStream(outputFile));
+
+                        out.println(currentDirectory.getAbsolutePath());
+
+                        out.close();
+
+                    } else {
+                        System.out.println(currentDirectory.getAbsolutePath());
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             // ================= CD =================
@@ -156,25 +186,43 @@ public class Main {
 
                 File newDir;
 
-                // HOME DIRECTORY
                 if (path.equals("~")) {
                     newDir = new File(System.getenv("HOME"));
                 }
 
-                // ABSOLUTE PATH
                 else if (path.startsWith("/")) {
                     newDir = new File(path);
                 }
 
-                // RELATIVE PATH
                 else {
                     newDir = new File(currentDirectory, path);
                 }
 
                 try {
                     newDir = newDir.getCanonicalFile();
-                } catch (Exception e) {
-                    System.out.println("cd: " + path + ": No such file or directory");
+                }
+
+                catch (Exception e) {
+
+                    try {
+
+                        if (errorFile != null) {
+
+                            PrintStream err =
+                                    new PrintStream(new FileOutputStream(errorFile));
+
+                            err.println("cd: " + path + ": No such file or directory");
+
+                            err.close();
+
+                        } else {
+                            System.err.println("cd: " + path + ": No such file or directory");
+                        }
+
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+
                     continue;
                 }
 
@@ -187,7 +235,25 @@ public class Main {
                             currentDirectory.getAbsolutePath());
 
                 } else {
-                    System.out.println("cd: " + path + ": No such file or directory");
+
+                    try {
+
+                        if (errorFile != null) {
+
+                            PrintStream err =
+                                    new PrintStream(new FileOutputStream(errorFile));
+
+                            err.println("cd: " + path + ": No such file or directory");
+
+                            err.close();
+
+                        } else {
+                            System.err.println("cd: " + path + ": No such file or directory");
+                        }
+
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
                 }
             }
 
@@ -236,13 +302,32 @@ public class Main {
 
                 String cmd = parts[1];
 
-                // BUILTIN CHECK
                 if (builtins.contains(cmd)) {
-                    System.out.println(cmd + " is a shell builtin");
+
+                    String result = cmd + " is a shell builtin";
+
+                    try {
+
+                        if (outputFile != null) {
+
+                            PrintStream out =
+                                    new PrintStream(new FileOutputStream(outputFile));
+
+                            out.println(result);
+
+                            out.close();
+
+                        } else {
+                            System.out.println(result);
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
                     continue;
                 }
 
-                // PATH SEARCH
                 String pathEnv = System.getenv("PATH");
 
                 String[] paths = pathEnv.split(File.pathSeparator);
@@ -255,8 +340,27 @@ public class Main {
 
                     if (file.exists() && file.canExecute()) {
 
-                        System.out.println(
-                                cmd + " is " + file.getAbsolutePath());
+                        String result =
+                                cmd + " is " + file.getAbsolutePath();
+
+                        try {
+
+                            if (outputFile != null) {
+
+                                PrintStream out =
+                                        new PrintStream(new FileOutputStream(outputFile));
+
+                                out.println(result);
+
+                                out.close();
+
+                            } else {
+                                System.out.println(result);
+                            }
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
 
                         found = true;
 
@@ -265,7 +369,27 @@ public class Main {
                 }
 
                 if (!found) {
-                    System.out.println(cmd + ": not found");
+
+                    String result = cmd + ": not found";
+
+                    try {
+
+                        if (errorFile != null) {
+
+                            PrintStream err =
+                                    new PrintStream(new FileOutputStream(errorFile));
+
+                            err.println(result);
+
+                            err.close();
+
+                        } else {
+                            System.err.println(result);
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 
@@ -301,6 +425,7 @@ public class Main {
                                     file.getParentFile()
                             );
 
+                            // STDOUT
                             if (outputFile != null) {
 
                                 FileOutputStream fos =
@@ -312,10 +437,25 @@ public class Main {
 
                             } else {
 
-                                process.getInputStream().transferTo(System.out);
+                                process.getInputStream()
+                                        .transferTo(System.out);
                             }
 
-                            process.getErrorStream().transferTo(System.err);
+                            // STDERR
+                            if (errorFile != null) {
+
+                                FileOutputStream errFos =
+                                        new FileOutputStream(errorFile);
+
+                                process.getErrorStream().transferTo(errFos);
+
+                                errFos.close();
+
+                            } else {
+
+                                process.getErrorStream()
+                                        .transferTo(System.err);
+                            }
 
                             process.waitFor();
 
@@ -330,7 +470,27 @@ public class Main {
                 }
 
                 if (!found) {
-                    System.out.println(command + ": not found");
+
+                    String result = command + ": not found";
+
+                    try {
+
+                        if (errorFile != null) {
+
+                            PrintStream err =
+                                    new PrintStream(new FileOutputStream(errorFile));
+
+                            err.println(result);
+
+                            err.close();
+
+                        } else {
+                            System.err.println(result);
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
