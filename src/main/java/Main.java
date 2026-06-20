@@ -19,6 +19,8 @@ public class Main {
 
             String input = scanner.nextLine();
 
+            // ================= PARSER =================
+
             ArrayList<String> partsList = new ArrayList<>();
 
             StringBuilder current = new StringBuilder();
@@ -30,8 +32,10 @@ public class Main {
 
                 char ch = input.charAt(i);
 
+                // BACKSLASH HANDLING
                 if (ch == '\\') {
 
+                    // Outside quotes
                     if (!inSingleQuote && !inDoubleQuote) {
 
                         if (i + 1 < input.length()) {
@@ -40,6 +44,7 @@ public class Main {
                         }
                     }
 
+                    // Inside double quotes
                     else if (inDoubleQuote) {
 
                         if (i + 1 < input.length()) {
@@ -58,19 +63,23 @@ public class Main {
                         }
                     }
 
+                    // Inside single quotes
                     else {
                         current.append('\\');
                     }
                 }
 
+                // SINGLE QUOTES
                 else if (ch == '\'' && !inDoubleQuote) {
                     inSingleQuote = !inSingleQuote;
                 }
 
+                // DOUBLE QUOTES
                 else if (ch == '"' && !inSingleQuote) {
                     inDoubleQuote = !inDoubleQuote;
                 }
 
+                // SPACES OUTSIDE QUOTES
                 else if (Character.isWhitespace(ch)
                         && !inSingleQuote
                         && !inDoubleQuote) {
@@ -81,6 +90,7 @@ public class Main {
                     }
                 }
 
+                // NORMAL CHARACTERS
                 else {
                     current.append(ch);
                 }
@@ -98,13 +108,19 @@ public class Main {
 
             String command = parts[0];
 
+            // ================= EXIT =================
+
             if (command.equals("exit")) {
                 break;
             }
 
+            // ================= PWD =================
+
             else if (command.equals("pwd")) {
                 System.out.println(currentDirectory.getAbsolutePath());
             }
+
+            // ================= CD =================
 
             else if (command.equals("cd")) {
 
@@ -116,14 +132,17 @@ public class Main {
 
                 File newDir;
 
+                // HOME DIRECTORY
                 if (path.equals("~")) {
                     newDir = new File(System.getenv("HOME"));
                 }
 
+                // ABSOLUTE PATH
                 else if (path.startsWith("/")) {
                     newDir = new File(path);
                 }
 
+                // RELATIVE PATH
                 else {
                     newDir = new File(currentDirectory, path);
                 }
@@ -148,6 +167,8 @@ public class Main {
                 }
             }
 
+            // ================= ECHO =================
+
             else if (command.equals("echo")) {
 
                 StringBuilder output = new StringBuilder();
@@ -164,6 +185,8 @@ public class Main {
                 System.out.println(output);
             }
 
+            // ================= TYPE =================
+
             else if (command.equals("type")) {
 
                 if (parts.length < 2) {
@@ -172,11 +195,13 @@ public class Main {
 
                 String cmd = parts[1];
 
+                // BUILTIN CHECK
                 if (builtins.contains(cmd)) {
                     System.out.println(cmd + " is a shell builtin");
                     continue;
                 }
 
+                // PATH SEARCH
                 String pathEnv = System.getenv("PATH");
 
                 String[] paths = pathEnv.split(File.pathSeparator);
@@ -203,6 +228,8 @@ public class Main {
                 }
             }
 
+            // ================= EXTERNAL COMMAND =================
+
             else {
 
                 String pathEnv = System.getenv("PATH");
@@ -219,9 +246,12 @@ public class Main {
 
                         try {
 
+                            // Build command array
                             String[] execArgs = new String[parts.length];
 
-                            execArgs[0] = file.getAbsolutePath();
+                            // IMPORTANT:
+                            // keep argv[0] as original command name
+                            execArgs[0] = command;
 
                             for (int i = 1; i < parts.length; i++) {
                                 execArgs[i] = parts[i];
@@ -230,12 +260,15 @@ public class Main {
                             Process process = Runtime.getRuntime().exec(
                                     execArgs,
                                     null,
-                                    currentDirectory);
+                                    file.getParentFile()
+                            );
 
                             process.getInputStream().transferTo(System.out);
                             process.getErrorStream().transferTo(System.err);
 
                             process.waitFor();
+
+                            found = true;
 
                         } catch (Exception e) {
                             e.printStackTrace();
