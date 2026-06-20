@@ -186,7 +186,7 @@ public class Main {
 
             String command = parts[0];
 
-            // ================= BACKGROUND JOB =================
+            // ================= BACKGROUND =================
 
             boolean runInBackground = false;
 
@@ -217,11 +217,9 @@ public class Main {
 
                     if (outputFile != null) {
 
-                        PrintStream out =
-                                new PrintStream(
-                                        new FileOutputStream(
-                                                outputFile,
-                                                appendOutput));
+                        PrintStream out = new PrintStream(
+                                new FileOutputStream(outputFile, appendOutput)
+                        );
 
                         out.println(currentDirectory.getAbsolutePath());
 
@@ -233,9 +231,8 @@ public class Main {
 
                     if (errorFile != null) {
                         new PrintStream(
-                                new FileOutputStream(
-                                        errorFile,
-                                        appendError)).close();
+                                new FileOutputStream(errorFile, appendError)
+                        ).close();
                     }
 
                 } catch (Exception e) {
@@ -277,11 +274,9 @@ public class Main {
 
                         if (errorFile != null) {
 
-                            PrintStream err =
-                                    new PrintStream(
-                                            new FileOutputStream(
-                                                    errorFile,
-                                                    appendError));
+                            PrintStream err = new PrintStream(
+                                    new FileOutputStream(errorFile, appendError)
+                            );
 
                             err.println("cd: " + path + ": No such file or directory");
 
@@ -312,11 +307,9 @@ public class Main {
 
                         if (errorFile != null) {
 
-                            PrintStream err =
-                                    new PrintStream(
-                                            new FileOutputStream(
-                                                    errorFile,
-                                                    appendError));
+                            PrintStream err = new PrintStream(
+                                    new FileOutputStream(errorFile, appendError)
+                            );
 
                             err.println("cd: " + path + ": No such file or directory");
 
@@ -355,26 +348,20 @@ public class Main {
 
                 try {
 
-                    // create stderr file even if empty
                     if (errorFile != null) {
 
-                        PrintStream err =
-                                new PrintStream(
-                                        new FileOutputStream(
-                                                errorFile,
-                                                appendError));
+                        PrintStream err = new PrintStream(
+                                new FileOutputStream(errorFile, appendError)
+                        );
 
                         err.close();
                     }
 
-                    // stdout handling
                     if (outputFile != null) {
 
-                        PrintStream fileOut =
-                                new PrintStream(
-                                        new FileOutputStream(
-                                                outputFile,
-                                                appendOutput));
+                        PrintStream fileOut = new PrintStream(
+                                new FileOutputStream(outputFile, appendOutput)
+                        );
 
                         fileOut.println(output);
 
@@ -466,12 +453,21 @@ public class Main {
 
                             if (runInBackground) {
 
-                                // inherit terminal streams
-                                process.getInputStream()
-                                        .transferTo(System.out);
+                                new Thread(() -> {
+                                    try {
+                                        process.getInputStream()
+                                                .transferTo(System.out);
+                                    } catch (Exception ignored) {
+                                    }
+                                }).start();
 
-                                process.getErrorStream()
-                                        .transferTo(System.err);
+                                new Thread(() -> {
+                                    try {
+                                        process.getErrorStream()
+                                                .transferTo(System.err);
+                                    } catch (Exception ignored) {
+                                    }
+                                }).start();
 
                                 int currentJob = jobCounter++;
 
@@ -486,7 +482,7 @@ public class Main {
 
                             else {
 
-                                // CREATE OUTPUT FILE EVEN IF EMPTY
+                                // STDOUT
                                 if (outputFile != null) {
 
                                     FileOutputStream fos =
@@ -504,7 +500,7 @@ public class Main {
                                             .transferTo(System.out);
                                 }
 
-                                // CREATE ERROR FILE EVEN IF EMPTY
+                                // STDERR
                                 if (errorFile != null) {
 
                                     FileOutputStream errFos =
@@ -543,11 +539,9 @@ public class Main {
 
                         if (errorFile != null) {
 
-                            PrintStream err =
-                                    new PrintStream(
-                                            new FileOutputStream(
-                                                    errorFile,
-                                                    appendError));
+                            PrintStream err = new PrintStream(
+                                    new FileOutputStream(errorFile, appendError)
+                            );
 
                             err.println(result);
 
