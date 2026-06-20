@@ -1,4 +1,6 @@
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Set;
@@ -102,6 +104,28 @@ public class Main {
 
             String[] parts = partsList.toArray(new String[0]);
 
+            // ================= OUTPUT REDIRECTION =================
+
+            String outputFile = null;
+
+            ArrayList<String> cleanedParts = new ArrayList<>();
+
+            for (int i = 0; i < parts.length; i++) {
+
+                if (parts[i].equals(">") || parts[i].equals("1>")) {
+
+                    if (i + 1 < parts.length) {
+                        outputFile = parts[i + 1];
+                    }
+
+                    break;
+                }
+
+                cleanedParts.add(parts[i]);
+            }
+
+            parts = cleanedParts.toArray(new String[0]);
+
             if (parts.length == 0) {
                 continue;
             }
@@ -182,7 +206,24 @@ public class Main {
                     }
                 }
 
-                System.out.println(output);
+                try {
+
+                    if (outputFile != null) {
+
+                        PrintStream fileOut =
+                                new PrintStream(new FileOutputStream(outputFile));
+
+                        fileOut.println(output);
+
+                        fileOut.close();
+
+                    } else {
+                        System.out.println(output);
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             // ================= TYPE =================
@@ -246,11 +287,8 @@ public class Main {
 
                         try {
 
-                            // Build command array
                             String[] execArgs = new String[parts.length];
 
-                            // IMPORTANT:
-                            // keep argv[0] as original command name
                             execArgs[0] = command;
 
                             for (int i = 1; i < parts.length; i++) {
@@ -263,7 +301,20 @@ public class Main {
                                     file.getParentFile()
                             );
 
-                            process.getInputStream().transferTo(System.out);
+                            if (outputFile != null) {
+
+                                FileOutputStream fos =
+                                        new FileOutputStream(outputFile);
+
+                                process.getInputStream().transferTo(fos);
+
+                                fos.close();
+
+                            } else {
+
+                                process.getInputStream().transferTo(System.out);
+                            }
+
                             process.getErrorStream().transferTo(System.err);
 
                             process.waitFor();
