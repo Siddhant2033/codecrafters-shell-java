@@ -17,7 +17,10 @@ public class Main {
 
             System.out.print("$ ");
 
-            String input = scanner.nextLine().trim();
+            String input = scanner.nextLine();
+
+          
+
             ArrayList<String> partsList = new ArrayList<>();
 
             StringBuilder current = new StringBuilder();
@@ -49,14 +52,15 @@ public class Main {
                                 current.append(next);
                                 i++;
                             } else {
-
                                 current.append('\\');
                             }
+
                         } else {
                             current.append('\\');
                         }
                     }
 
+               
                     else {
                         current.append('\\');
                     }
@@ -66,11 +70,15 @@ public class Main {
                     inSingleQuote = !inSingleQuote;
                 }
 
+         
                 else if (ch == '"' && !inSingleQuote) {
                     inDoubleQuote = !inDoubleQuote;
                 }
 
-                else if (Character.isWhitespace(ch) && !inSingleQuote && !inDoubleQuote) {
+             
+                else if (Character.isWhitespace(ch)
+                        && !inSingleQuote
+                        && !inDoubleQuote) {
 
                     if (current.length() > 0) {
                         partsList.add(current.toString());
@@ -78,6 +86,7 @@ public class Main {
                     }
                 }
 
+             
                 else {
                     current.append(ch);
                 }
@@ -95,13 +104,16 @@ public class Main {
 
             String command = parts[0];
 
-            if (input.equals("exit")) {
+
+            if (command.equals("exit")) {
                 break;
             }
 
             else if (command.equals("pwd")) {
                 System.out.println(currentDirectory.getAbsolutePath());
             }
+
+    
 
             else if (command.equals("cd")) {
 
@@ -113,14 +125,17 @@ public class Main {
 
                 File newDir;
 
+             
                 if (path.equals("~")) {
                     newDir = new File(System.getenv("HOME"));
                 }
 
+         
                 else if (path.startsWith("/")) {
                     newDir = new File(path);
                 }
 
+           
                 else {
                     newDir = new File(currentDirectory, path);
                 }
@@ -133,12 +148,19 @@ public class Main {
                 }
 
                 if (newDir.exists() && newDir.isDirectory()) {
+
                     currentDirectory = newDir;
-                    System.setProperty("user.dir", currentDirectory.getAbsolutePath());
+
+                    System.setProperty(
+                            "user.dir",
+                            currentDirectory.getAbsolutePath());
+
                 } else {
                     System.out.println("cd: " + path + ": No such file or directory");
                 }
             }
+
+      
 
             else if (command.equals("echo")) {
 
@@ -156,6 +178,8 @@ public class Main {
                 System.out.println(output);
             }
 
+            
+
             else if (command.equals("type")) {
 
                 if (parts.length < 2) {
@@ -164,11 +188,13 @@ public class Main {
 
                 String cmd = parts[1];
 
+         
                 if (builtins.contains(cmd)) {
                     System.out.println(cmd + " is a shell builtin");
                     continue;
                 }
 
+        
                 String pathEnv = System.getenv("PATH");
 
                 String[] paths = pathEnv.split(File.pathSeparator);
@@ -181,7 +207,8 @@ public class Main {
 
                     if (file.exists() && file.canExecute()) {
 
-                        System.out.println(cmd + " is " + file.getAbsolutePath());
+                        System.out.println(
+                                cmd + " is " + file.getAbsolutePath());
 
                         found = true;
 
@@ -193,6 +220,7 @@ public class Main {
                     System.out.println(cmd + ": not found");
                 }
             }
+
 
             else {
 
@@ -210,7 +238,10 @@ public class Main {
 
                         try {
 
-                            ProcessBuilder pb = new ProcessBuilder(parts);
+                            parts[0] = file.getAbsolutePath();
+
+                            ProcessBuilder pb =
+                                    new ProcessBuilder(parts);
 
                             pb.directory(currentDirectory);
 
